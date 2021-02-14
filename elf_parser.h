@@ -6,7 +6,7 @@
 
 typedef struct {
     uint64_t addr;
-
+    char* name;
     size_t size;
     uint8_t* data;
 } elf_section_t;
