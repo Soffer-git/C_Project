@@ -79,14 +79,6 @@ void elf_parser_parse(FILE* file, parsed_elf_t* o_parsed_elf) {
         uint8_t* data_point = malloc(o_parsed_elf->program_sections[i].size);
         o_parsed_elf->program_sections[i].data = data_point;
         get_from_file(file, o_parsed_elf->program_sections[i].data, program_header.p_filesz, program_header.p_offset);
-        
-        printf("Program section number %d: ", i);
-        for (int j = 0; j < 3; j++)
-        {
-            printf("%x ", o_parsed_elf->program_sections[i].data[j]);
-        }
-
-        printf("\n\n");
     }
     
     fseek(file, elf_header.e_shoff, SEEK_SET);
