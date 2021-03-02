@@ -13,14 +13,12 @@ typedef struct {
 
 typedef struct {
     uint64_t addr;
-
     size_t size;
     uint8_t* data;
 } elf_program_section_t;
 
 typedef struct {
     uint64_t entry;
-
     size_t num_of_sections;
     elf_section_t* sections;
     

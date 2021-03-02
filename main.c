@@ -1,15 +1,24 @@
 #include <stdio.h>
 #include "elf_parser.h"
+#include "arm_emulator.h"
 
 int test();
 
 int main(int argc, char* argv[]) {
-    if (!test()) {
-        printf("All tests passed!\n");
-    } 
-    else {
-        printf("Tests failed. :(\n");
-    }
+    FILE* file = fopen("emulate_me_arm64.out", "rb");
+    parsed_elf_t elf;
+    arm_emulator_t emulator;
+
+    elf_parser_parse(file, &elf);
+    arm_emulator_load_elf(&emulator, &elf);
+    arm_emulator_run(&emulator);
+    return 0;
+    // if (!test()) {
+    //     printf("\n\nAll tests passed!\n");
+    // } 
+    // else {
+    //     printf("\n\nTests failed. :(\n");
+    // }
 }
 
 int test() {
@@ -17,18 +26,22 @@ int test() {
     parsed_elf_t elf;
 
     elf_parser_parse(file, &elf);
-    printf("Entry is %x\n", elf.entry);
-
-    if (elf.entry != 0x4001d8) {
-        printf("entry is wrong.\n");
-        return -1;
-    }
+    printf("Entry is %lx", elf.entry);
+    if (elf.entry != 0x4001d8) return -1;
 
     for (int i = 0; i < elf.num_of_program_sections; i++) {
-        printf("Program section address 0x%x: ", elf.program_sections[i].addr);
+        printf("\n\nProgram section number %x\nAddress: 0x%lx\nSize: 0x%lx\nData: ", i, elf.program_sections[i].addr, elf.program_sections[i].size);
         for (int j = 0; j < 3; j++)
         {
-            printf("%x ", elf.program_sections[i].data[j]);
+            printf("%x", elf.program_sections[i].data[j]);
+        }
+    }
+
+    for (int i = 0; i < elf.num_of_sections; i++) {
+        printf("\n\nSection number %x\nAddress: 0x%lx\nExtension: %s\nSize: 0x%lx\nData: ", i, elf.sections[i].addr, elf.sections[i].name, elf.sections[i].size);
+        for (int j = 0; j < 3; j++)
+        {
+            printf("%x", elf.sections[i].data[j]);
         }
     }
     return 0;

@@ -73,7 +73,6 @@ void elf_parser_parse(FILE* file, parsed_elf_t* o_parsed_elf) {
     {
         program_header_t program_header;
         fread(&program_header, sizeof(program_header), 1, file);
-        if (program_header.p_type == NULL) continue;
         o_parsed_elf->program_sections[i].addr = program_header.p_vaddr;
         o_parsed_elf->program_sections[i].size = program_header.p_filesz;
         uint8_t* data_point = malloc(o_parsed_elf->program_sections[i].size);
@@ -86,21 +85,12 @@ void elf_parser_parse(FILE* file, parsed_elf_t* o_parsed_elf) {
     {
         section_header_t section_header;
         fread(&section_header, sizeof(section_header), 1, file);
-        if (section_header.sh_type == NULL) continue;
 
         o_parsed_elf->sections[i].addr = section_header.sh_addr;
         o_parsed_elf->sections[i].size = section_header.sh_size;
         uint8_t* data_point = malloc(o_parsed_elf->sections[i].size);
         o_parsed_elf->sections[i].data = data_point;
         get_from_file(file, o_parsed_elf->sections[i].data, section_header.sh_size, section_header.sh_offset);
-        
-        printf("Section number %d: ", i);
-        for (int j = 0; j < 3; j++)
-        {
-            printf("%x ", o_parsed_elf->sections[i].data[j]);
-        }
-
-        printf("\n\n");
     }
 
     fseek(file, elf_header.e_shoff, SEEK_SET);
@@ -109,9 +99,6 @@ void elf_parser_parse(FILE* file, parsed_elf_t* o_parsed_elf) {
         section_header_t section_header;
         fread(&section_header, sizeof(section_header), 1, file);
         o_parsed_elf->sections[i].name = &o_parsed_elf->sections[elf_header.e_shstrndx].data[section_header.sh_name];
-        printf("Name number %d: %s ", i, o_parsed_elf->sections[i].name);
-
-        printf("\n\n");
     }
 }
 
