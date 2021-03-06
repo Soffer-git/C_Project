@@ -7,8 +7,7 @@ int test();
 /* Missions:
 1. Some of the sections have an address of 0 - probably should be fixed. :D
 2. Use the elf_parser_free() function.
-3. Complete the STP handling.
-4. The main while loop in arm_emulator_run should have a more meaningful parameter.
+3. The main while loop in arm_emulator_run should have a more meaningful parameter.
 */
 
 int main(int argc, char* argv[]) {
