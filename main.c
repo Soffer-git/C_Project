@@ -4,6 +4,13 @@
 
 int test();
 
+/* Missions:
+1. Some of the sections have an address of 0 - probably should be fixed. :D
+2. Use the elf_parser_free() function.
+3. Complete the STP handling.
+4. The main while loop in arm_emulator_run should have a more meaningful parameter.
+*/
+
 int main(int argc, char* argv[]) {
     FILE* file = fopen("emulate_me_arm64.out", "rb");
     parsed_elf_t elf;
@@ -12,13 +19,8 @@ int main(int argc, char* argv[]) {
     elf_parser_parse(file, &elf);
     arm_emulator_load_elf(&emulator, &elf);
     arm_emulator_run(&emulator);
+    test(); // Only prints information for now...
     return 0;
-    // if (!test()) {
-    //     printf("\n\nAll tests passed!\n");
-    // } 
-    // else {
-    //     printf("\n\nTests failed. :(\n");
-    // }
 }
 
 int test() {
