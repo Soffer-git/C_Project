@@ -3,10 +3,9 @@
 
 typedef struct 
 {
-    uint64_t X[31];
+    uint64_t X[32];
     uint64_t PC;
     uint64_t CPSR;
-    uint64_t SP;
 } arm_emulator_registers_t;
 
 
