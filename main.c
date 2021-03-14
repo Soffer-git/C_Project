@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     elf_parser_parse(file, &elf);
     arm_emulator_load_elf(&emulator, &elf);
     arm_emulator_run(&emulator);
-    test(); // Only prints information for now...
+    // test(); // Only prints information for now...
     return 0;
 }
 

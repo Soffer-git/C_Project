@@ -1,6 +1,8 @@
-#include "arm_emulator.h"
 #include <string.h>
 #include <byteswap.h>
+#include "arm_emulator.h"
+#include "opcode_tree.h"
+
 
 void arm_emulator_load_elf(arm_emulator_t* emulator, parsed_elf_t* elf) {
     memset(emulator, 0, sizeof(arm_emulator_t));
@@ -34,34 +36,18 @@ void arm_emulator_load_elf(arm_emulator_t* emulator, parsed_elf_t* elf) {
 //     printf("%s%s", bit_rep[byte >> 4], bit_rep[byte & 0x0F]);
 // }
 
-void arm_emulator_STP(arm_emulator_t* emulator, uint32_t opcode)
-{
-    uint8_t Rt   = (opcode & 0x1f)     >> 0 ;
-    uint8_t Rn   = (opcode & 0x3e0)    >> 5 ;
-    uint8_t Rt2  = (opcode & 0x7c00)   >> 10;
-    int8_t imm7  = (opcode & 0x3f8000) >> 15;
-
-    uint64_t addr = emulator->registers.X[Rn] + imm7 * 8;
-    memory_allocation_t* page = memory_allocator_find_memory_record(&(emulator->memory), addr);
-    page->data[addr - page->addr] = emulator->registers.X[Rt];
-    page->data[addr - page->addr + 8] = emulator->registers.X[Rt2];
-}
 
 void arm_emulator_run(arm_emulator_t* emulator)
 {
+    opcode_tree_t tree;
+    opcode_tree_init(&tree);
     while (1)
     {
         memory_allocation_t* page = memory_allocator_find_memory_record(&emulator->memory, emulator->registers.PC);
         uint32_t opcode = *(uint32_t*)(&page->data[emulator->registers.PC - page->addr]);
-        switch ((opcode & (0x1ff << 21)) >> 22) {
-            case 0b010100110: // STP
-                arm_emulator_STP(emulator, opcode);
-                printf("Found STP\n");
-                break;
-            default:
-                printf("unknown opcode: %x\n", opcode);
-                return;
-        }
+        opcode_handler_t opcode_h = opcode_tree_find_opcode(&tree, opcode);
+        if (!opcode_h) break;
+        opcode_h(emulator, opcode);
         printf("PC = 0x%lx\n", emulator->registers.PC);
         emulator->registers.PC += 4;
     }

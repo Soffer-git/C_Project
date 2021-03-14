@@ -1,3 +1,5 @@
+#pragma once
+
 #include "memory_allocator.h"
 #include "elf_parser.h"
 
