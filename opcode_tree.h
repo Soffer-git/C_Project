@@ -22,4 +22,5 @@ typedef struct
 
 
 void opcode_tree_init(opcode_tree_t* tree);
+void opcode_tree_add_opcode(opcode_tree_t *tree, const char* name, uint32_t opcode, int lengthInBits, opcode_handler_t handler);
 opcode_handler_t opcode_tree_find_opcode(opcode_tree_t* tree, uint32_t opcode);

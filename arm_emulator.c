@@ -21,7 +21,7 @@ void arm_emulator_load_elf(arm_emulator_t* emulator, parsed_elf_t* elf) {
     emulator->registers.PC = elf->entry;
 
     memory_allocation_t* page = memory_allocator_allocate_memory(&(emulator->memory), 0x7F00000000, 1024*1024);
-    emulator->registers.X[31] = page->addr;
+    emulator->registers.X[31] = page->addr + page->size;
 }
 
 // const char *bit_rep[16] = {
@@ -48,8 +48,7 @@ void arm_emulator_run(arm_emulator_t* emulator)
         opcode_handler_t opcode_h = opcode_tree_find_opcode(&tree, opcode);
         if (!opcode_h) break;
         opcode_h(emulator, opcode);
-        printf("PC = 0x%lx\n", emulator->registers.PC);
-        emulator->registers.PC += 4;
+        // printf("PC = 0x%lx\n", emulator->registers.PC);
     }
     return;
 }
