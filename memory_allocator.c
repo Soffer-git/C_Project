@@ -15,7 +15,8 @@ memory_allocation_t* memory_allocator_find_memory_record(memory_table_t* mem, of
     memory_allocation_t* curr = mem->head;
     while (curr != NULL)
     {
-        if (addr >= curr->addr && addr < curr->addr + curr->size) return curr;
+        if (addr >= curr->addr && addr < curr->addr + curr->size) 
+            return curr;
         curr = curr->next;
     }
     return NULL;

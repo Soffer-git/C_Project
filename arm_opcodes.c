@@ -76,7 +76,6 @@ void arm_emulator_STR_unsigned_offset_64(arm_emulator_t* emulator, uint32_t opco
     emulator->registers.PC += 4;
 }
 
-// Written as STR_64 - needs to be changed!
 void arm_emulator_STR_unsigned_offset_32(arm_emulator_t* emulator, uint32_t opcode)
 {
     uint8_t Rt   = (opcode & 0x1f)     >> 0 ;
@@ -84,7 +83,9 @@ void arm_emulator_STR_unsigned_offset_32(arm_emulator_t* emulator, uint32_t opco
     int16_t imm12  = (opcode & 0x3ffc00)   >> 10;
     printf("str w%d, [x%d, #0w%x]\n", Rt, Rn, imm12 * 4);
 
-    uint64_t addr = emulator->registers.X[Rn] + imm12 * 4;
+    emulator->registers.X[Rn] &= ~(uint64_t)0xffffffff;
+    emulator->registers.X[Rn] |= imm12 * 4;
+    uint64_t addr = emulator->registers.X[Rn];
     memory_allocation_t* page = memory_allocator_find_memory_record(&(emulator->memory), addr);
     *(uint64_t*)(&page->data[addr - page->addr]) = emulator->registers.X[Rt];
     emulator->registers.X[Rn] = addr;
@@ -106,8 +107,6 @@ void arm_emulator_MOVZ_64(arm_emulator_t* emulator, uint32_t opcode)
     
     emulator->registers.X[Rd] = imm16 << (hw * 16);
     emulator->registers.PC += 4;
-
-
 }
 
 void arm_emulator_MOVZ_32(arm_emulator_t* emulator, uint32_t opcode)
