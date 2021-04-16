@@ -47,18 +47,50 @@ void arm_emulator_ADD(arm_emulator_t* emulator, uint32_t opcode)
 
 }
 
-void arm_emulator_STR_unsigned_offset(arm_emulator_t* emulator, uint32_t opcode)
+void arm_emulator_ADD_shifted_register(arm_emulator_t* emulator, uint32_t opcode)
 {
-    uint8_t Rt   = (opcode & 0x1f)     >> 0 ;
+    uint8_t Rd     =  (opcode & 0x1f)       >> 0 ;
+    uint8_t Rn     =  (opcode & 0x3e0)      >> 5 ;
+    int8_t imm6    =  (opcode & 0xfc00)     >> 10;
+    uint8_t Rm     =  (opcode & 0x1f0000)   >> 16;
+    uint8_t shift  =  (opcode & 0xc00000)   >> 22;
+    printf("add x%d, x%d, x%d\n", Rd, Rn, Rm);
+    if (shift == 0) emulator->registers.X[Rd] = emulator->registers.X[Rn] + emulator->registers.X[Rm] >> imm6;
+    else if (shift == 1) emulator->registers.X[Rd] = emulator->registers.X[Rn] + emulator->registers.X[Rm] << imm6;
+    else printf("Unknown shift type!");
+    emulator->registers.PC += 4;
+
+}
+
+void arm_emulator_SUB(arm_emulator_t* emulator, uint32_t opcode)
+{
+    uint8_t Rd   = (opcode & 0x1f)     >> 0 ;
     uint8_t Rn   = (opcode & 0x3e0)    >> 5 ;
     int16_t imm12  = (opcode & 0x3ffc00)   >> 10;
-    printf("str x%d, [x%d, #0x%x]\n", Rt, Rn, imm12 * 8);
+    if (imm12 == 0) {
+        printf("mov x%d, x%d\n", Rd, Rn);
+    }
+    else {
+        printf("sub x%d, [x%d, #%x]\n", Rd, Rn, imm12);
+    }
 
-    uint64_t addr = emulator->registers.X[Rn] + imm12 * 8;
-    memory_allocation_t* page = memory_allocator_find_memory_record(&(emulator->memory), addr);
-    *(uint64_t*)(&page->data[addr - page->addr]) = emulator->registers.X[Rt];
-    emulator->registers.X[Rn] = addr;
+    emulator->registers.X[Rd] = emulator->registers.X[Rn] - imm12;
     emulator->registers.PC += 4;
+
+}
+
+void arm_emulator_MOV_register(arm_emulator_t* emulator, uint32_t opcode)
+{
+    uint8_t Rd     =  (opcode & 0x1f)       >> 0 ;
+    uint8_t Rn     =  (opcode & 0x3e0)      >> 5 ;
+    uint8_t Rm     =  (opcode & 0x1f0000)   >> 16;
+    uint8_t shift  =  (opcode & 0xc00000)   >> 22;
+    printf("mov w%d, w%d\n", Rd, Rm);
+    emulator->registers.X[Rn] &= ~(uint64_t)0xffffffff;
+    emulator->registers.X[Rm] &= ~(uint64_t)0xffffffff;
+    emulator->registers.X[Rd] = emulator->registers.X[Rn] + emulator->registers.X[Rm];
+    emulator->registers.PC += 4;
+
 }
 
 void arm_emulator_STR_unsigned_offset_64(arm_emulator_t* emulator, uint32_t opcode)
@@ -225,7 +257,7 @@ void arm_emulator_B(arm_emulator_t* emulator, uint32_t opcode)
     int32_t imm26 = sign_extend(opcode & 0x3ffffff, 26) * 4;
     printf("b #0x%x\n", imm26);
 
-    emulator->registers.X[30] = emulator->registers.PC;
+    emulator->registers.X[30] = emulator->registers.PC - 4;
     emulator->registers.PC = emulator->registers.PC + imm26;
     printf("new pc: %lx\n", emulator->registers.PC);
 }
@@ -247,8 +279,11 @@ void opcode_tree_init(opcode_tree_t *tree)
     memset(tree, 0, sizeof(opcode_tree_t));
     opcode_tree_add_opcode(tree, "STP",    0b1010100110,  10, arm_emulator_STP_preindex);             // Done
     opcode_tree_add_opcode(tree, "ADD",    0b10010001,    8,  arm_emulator_ADD);                      // Done
+    opcode_tree_add_opcode(tree, "MOVR",   0b00101010000, 11, arm_emulator_MOV_register);             // Not Done
+    opcode_tree_add_opcode(tree, "ADDSR",  0b10001011,    8,  arm_emulator_ADD_shifted_register);     // Done
+    opcode_tree_add_opcode(tree, "SUB",    0b11010001,    8,  arm_emulator_SUB);                      // Done
     opcode_tree_add_opcode(tree, "STR",    0b1111100100,  10, arm_emulator_STR_unsigned_offset_64);   // Done
-    opcode_tree_add_opcode(tree, "STR",    0b1011100100,  10, arm_emulator_STR_unsigned_offset_32);   // Check
+    opcode_tree_add_opcode(tree, "STR",    0b1011100100,  10, arm_emulator_STR_unsigned_offset_32);   // Done
     opcode_tree_add_opcode(tree, "STRB",   0b0011100100,  10, arm_emulator_STRB_unsigned_offset_64);  // Not Done
     opcode_tree_add_opcode(tree, "LDR",    0b1011100101,  10, arm_emulator_LDR_unsigned_offset_32);   // Not Done
     opcode_tree_add_opcode(tree, "LDRSW",  0b1011100110,  10, arm_emulator_LDRSW_unsigned_offset_64); // Not Done
@@ -258,6 +293,6 @@ void opcode_tree_init(opcode_tree_t *tree)
     opcode_tree_add_opcode(tree, "CMP",    0b01110001,    8,  arm_emulator_CMP_32);                   // Not Done
     opcode_tree_add_opcode(tree, "ADRP",   0b10010000,    8,  arm_emulator_ADRP);                     // Not Done
     opcode_tree_add_opcode(tree, "BL",     0b100101,      6,  arm_emulator_BL);                       // Done
-    opcode_tree_add_opcode(tree, "B",      0b000101,      6,  arm_emulator_B);                        // Check
+    opcode_tree_add_opcode(tree, "B",      0b000101,      6,  arm_emulator_B);                        // Done
     opcode_tree_add_opcode(tree, "B.cond", 0b01010100,    8,  arm_emulator_B_cond);                   // Not Done 
 }
