@@ -20,7 +20,7 @@ void arm_emulator_load_elf(arm_emulator_t* emulator, parsed_elf_t* elf) {
 
     emulator->registers.PC = elf->entry;
 
-    memory_allocation_t* page = memory_allocator_allocate_memory(&(emulator->memory), 0x7F00000000, 1024*1024);
+    memory_allocation_t* page = memory_allocator_allocate_memory(&(emulator->memory), 0x7FFFF00000, 0xFF2B0);
     emulator->registers.X[31] = page->addr + page->size;
 }
 
